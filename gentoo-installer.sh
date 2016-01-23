@@ -82,7 +82,7 @@ check_connection() {
 
 set_disks() {
 	title=$title" - Preparing Disks"
-	whiptail --msgbox " wip " --title "$title" 10 70
+	whiptail --msgbox " work in progress " --title "$title" 10 70
 	title="Gentoo Installer 0.0.1 Tomas Simoes"
 }
 
