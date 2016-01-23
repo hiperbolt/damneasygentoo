@@ -1,6 +1,6 @@
 #!/bin/sh
 
-### Gentoo Install Script
+## Gentoo Install Script
 ## 
 ## Copyleft 2016 Tomás Simões
 ##
