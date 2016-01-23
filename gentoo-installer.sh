@@ -76,8 +76,8 @@ check_connection() {
 		}
 		
 		set_lan() {
-		net-setup
-		check_connection		
+			net-setup
+			check_connection		
 		}
 
 set_disks() {
