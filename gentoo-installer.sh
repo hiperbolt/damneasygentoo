@@ -170,6 +170,7 @@ set_disks3() {
 		
 	drive=$(bash /tmp/part.sh)
 	rm /tmp/part.sh
+	drive_gigs=$(lsblk | grep -w "$drive" | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1') 
 	set_disks4
 }
 
@@ -191,12 +192,82 @@ set_disks5() {
 #This class is bypassed if you select manual partitioning, classes meet again at set_disks7
 	whiptail --yesno "This will delete ALL data on /dev/$drive, are you sure?" --title "$title" 10 70
 	exitstatus=$?
+	if [ $exitstatus = 1 ]; then
+		exit
+	fi
+	
+	drive_fs=$(whiptail --menu "Please select your desired filesystem" 20 90 10 \
+	"ext4" "~" \
+	"ext3" "~" \
+	"ext2" "~" \
+	"btrfs" "~" 3>&1 1>&2 2>&3)	
+	
+	whiptail --yesno "Do you wish to create a swap space?" --title "$title" 10 70
+	exitstatus=$?
+	if [ $exitstatus = 0 ]; then
+	while ! "$swapped" 
+			  do
+				
+			### Prompt user to set size for new swapspace default is '512M'
+				SWAPSPACE=$(whiptail --inputbox "Select the size of your SWAP Partition" 10 70 "512M" 3>&1 1>&2 2>&3)
+					
+			### If user selects 'cancel' escape from while loop and set SWAP to false
+				if [ "$?" -gt "0" ]; then
+					SWAP=false
+					swapped=true
+				
+			### Else error checking on swapspace variable
+				else
+					
+				### If selected unit is set to 'M' MiB
+					if [ "$(grep -o ".$" <<< "$SWAPSPACE")" == "M" ]; then 
+						
+					### If swapsize exceeded the total volume of the drive in MiB taking into account 4 GiB for install space
+						if [ "$(grep -o '[0-9]*' <<< "$SWAPSPACE")" -lt "$(echo "$drive_gigs*1000-4096" | bc)" ]; then 
+							SWAP=true 
+							swapped=true
+						
+					### Else selected swap size exceedes total volume of drive print error message
+						else 
+							whiptail --title "$title" --msgbox "SWAP size is bigger then /dev/$drive" 10 70
+						fi
+
+				### Else if selected unit is set to 'G' GiB
+					elif [ "$(grep -o ".$" <<< "$SWAPSPACE")" == "G" ]; then 
+
+				### If swapsize exceeded the total volume of the drive in GiB taking into account 4 GiB for install space
+						if [ "$(grep -o '[0-9]*' <<< "$SWAPSPACE")" -lt "$(echo "$drive_gigs-4" | bc)" ]; then 
+							SWAP=true 
+							swapped=true
+							
+					### Else selected swap size exceedes total volume of drive print error message
+						else 
+							whiptail --title "$title" --msgbox "SWAP size is bigger then /dev/$drive" 10 70
+						fi
+
+				### Else size unit not set to 'G' for GiB or 'M' for MiB print error
+					else
+						whiptail --title "$title" --msgbox "Syntax Error" 10 70
+					fi
+				fi
+			done
+		
+			
+	else
+		if [ "$partitionscheme" == "gpt" ]; then
+			parted -a optimal /dev/$drive mklabel gpt
+			parted -a optimal /dev/$drive unit mib
+			parted -a optimal /dev/$drive mkpart primary 1 3
+			parted -a optimal /dev/$drive name 1 grub
+			parted 
+	fi
 }
 
 #
 #
 #
 #
+		
 #
 #
 #
