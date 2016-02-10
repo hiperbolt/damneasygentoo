@@ -184,7 +184,7 @@ set_disks4() {
 	if [ "$part_method" == "$method1" ]; then
 		set_disks5
 	else
-		echo "hi"
+		set_disks6
 	fi
 }
 
@@ -231,21 +231,6 @@ set_disks5() {
 						else 
 							whiptail --title "$title" --msgbox "SWAP size is bigger then /dev/$drive" 10 70
 						fi
-
-				### Else if selected unit is set to 'G' GiB
-					elif [ "$(grep -o ".$" <<< "$SWAPSPACE")" == "G" ]; then 
-
-				### If swapsize exceeded the total volume of the drive in GiB taking into account 4 GiB for install space
-						if [ "$(grep -o '[0-9]*' <<< "$SWAPSPACE")" -lt "$(echo "$drive_gigs-4" | bc)" ]; then 
-							SWAP=true 
-							swapped=true
-							
-					### Else selected swap size exceedes total volume of drive print error message
-						else 
-							whiptail --title "$title" --msgbox "SWAP size is bigger then /dev/$drive" 10 70
-						fi
-
-				### Else size unit not set to 'G' for GiB or 'M' for MiB print error
 					else
 						whiptail --title "$title" --msgbox "Syntax Error" 10 70
 					fi
@@ -253,23 +238,63 @@ set_disks5() {
 			done
 		
 			
-	else
-		if [ "$partitionscheme" == "gpt" ]; then
+	fi
+		if [ "$partitionscheme" == "gpt" ] && [ ! -z "$SWAPSPACE" ]; then
+			echo " GPT and true swap"
+			dd if=/dev/zero of=/dev/$drive bs=1M
 			parted -a optimal /dev/$drive mklabel gpt
+			parted -a optimal /dev/$drive rm 2
 			parted -a optimal /dev/$drive unit mib
 			parted -a optimal /dev/$drive mkpart primary 1 3
-			parted -a optimal /dev/$drive name 1 grub
-			parted 
-	fi
+			parted -a optimal /dev/$drive name 1 bootloader
+			parted -a optimal /dev/$drive set 1 bios_grub on
+			parted -a optimal /dev/$drive mkpart primary 3 131
+			parted -a optimal /dev/$drive name 2 boot
+			if [ "$interfacetype" == "uefi" ]; then
+				parted -a optimal /dev/$drive set 2 boot on
+			fi
+			SWAPSPACE=${SWAPSPACE//M}
+			let NEWSWAPSPACE=$SWAPSPACE+131
+			echo "$NEWSWAPSPACE"
+			parted -a optimal /dev/$drive mkpart primary 131 $NEWSWAPSPACE
+			parted -a optimal /dev/$drive name 3 swap
+			parted -a optimal /dev/$drive mkpart primary $NEWSWAPSPACE -1
+			parted -a optimal /dev/$drive name 4 rootfs
+		elif [ "$partitionscheme" == "gpt" ]; then
+			echo " GPT and false swap"
+			
+		elif [ "$partitionscheme" == "mbr" ] && [ ! -z "$SWAPSPACE" ]; then
+			echo " MBR and true swap"
+		elif [ "$partitionscheme" == "mbr" ]; then
+			echo " MBR and false swap"
+		fi
 }
 
+set_disks6() {
+leftat="set_disks7"
+echo "$leftat" > /tmp/damneasygentoo-leftat
+clear
+echo "You can return to the installer at any time by typing
+	damneasygentoo
+Good luck."
+}
+
+set_disks7() {
+echo "set_disks7"
+}
 #
 #
 #
 #
-		
+#		
 #
 #
 #
 #
+if [ -f /tmp/damneasygentoo-leftat ]; then
+	source /tmp/damneasygentoo-leftat
+	$leftat
+	rm /tmp/damneasygentoo-leftat
+else
 welcome_box
+fi
