@@ -260,9 +260,15 @@ set_disks5() {
 			parted -a optimal /dev/$drive name 3 swap
 			parted -a optimal /dev/$drive mkpart primary $NEWSWAPSPACE -1
 			parted -a optimal /dev/$drive name 4 rootfs
+			makefs.ext2 /dev/$drive"2"
+			makefs.$drive_fs /dev/$drive"4"
+			mkswap /dev/$drive"3"
+			swapon /dev/$drive"3"
+			mount /dev/$drive"4" /mnt/gentoo
+			mkdir /mnt/gentoo/boot
+			mount /dev/$drive"2" /mnt/gentoo/boot
 		elif [ "$partitionscheme" == "gpt" ]; then
 			echo " GPT and false swap"
-			
 		elif [ "$partitionscheme" == "mbr" ] && [ ! -z "$SWAPSPACE" ]; then
 			echo " MBR and true swap"
 		elif [ "$partitionscheme" == "mbr" ]; then
