@@ -31,6 +31,23 @@
 #Strings
 
 #Classes
+load() {
+
+	{	int="1"
+        	while (true)
+    	    	do
+    	            proc=$(ps | grep "$pid")
+    	            if [ "$?" -gt "0" ]; then break; fi
+    	            sleep $pri
+    	            echo $int
+    	            int=$((int+1))
+    	        done
+            echo 100
+            sleep 1
+	} | whiptail --title "$title" --gauge "$msg" 8 76 0
+
+}
+
 welcome_box() {
 	title="Gentoo Installer 0.0.1 Tomas Simoes"
 	whiptail --yesno "Welcome to the Gentoo Installer, proceed with instalation?" --title "$title" --yes-button "Yes, proceed." --no-button "No, cancel." 10 70
@@ -241,32 +258,10 @@ set_disks5() {
 	fi
 		if [ "$partitionscheme" == "gpt" ] && [ ! -z "$SWAPSPACE" ]; then
 			echo " GPT and true swap"
-			dd if=/dev/zero of=/dev/$drive bs=1M
-			parted -a optimal /dev/$drive mklabel gpt
-			parted -a optimal /dev/$drive rm 2
-			parted -a optimal /dev/$drive unit mib
-			parted -a optimal /dev/$drive mkpart primary 1 3
-			parted -a optimal /dev/$drive name 1 bootloader
-			parted -a optimal /dev/$drive set 1 bios_grub on
-			parted -a optimal /dev/$drive mkpart primary 3 131
-			parted -a optimal /dev/$drive name 2 boot
-			if [ "$interfacetype" == "uefi" ]; then
-				parted -a optimal /dev/$drive set 2 boot on
-			fi
 			SWAPSPACE=${SWAPSPACE//M}
 			let NEWSWAPSPACE=$SWAPSPACE+131
-			echo "$NEWSWAPSPACE"
-			parted -a optimal /dev/$drive mkpart primary 131 $NEWSWAPSPACE
-			parted -a optimal /dev/$drive name 3 swap
-			parted -a optimal /dev/$drive mkpart primary $NEWSWAPSPACE -1
-			parted -a optimal /dev/$drive name 4 rootfs
-			makefs.ext2 /dev/$drive"2"
-			makefs.$drive_fs /dev/$drive"4"
-			mkswap /dev/$drive"3"
-			swapon /dev/$drive"3"
-			mount /dev/$drive"4" /mnt/gentoo
-			mkdir /mnt/gentoo/boot
-			mount /dev/$drive"2" /mnt/gentoo/boot
+			echo -e "mklabel gpt\unit mib\mkpart primary 1 3\name 1 grub\set 1 bios_grub on\mkpart primary 3 131\name 2 boot\mkpart primary 131 $SWAPSPACE\name 3 swap\mkpart primary $SWAPSPACE -1\name 4 rootfs" | gdisk /dev/"$drive" &> /dev/null &
+			pid=$! pri=0.1 msg="Please wait while we format and partition your HDD, this may take some time." load
 		elif [ "$partitionscheme" == "gpt" ]; then
 			echo " GPT and false swap"
 		elif [ "$partitionscheme" == "mbr" ] && [ ! -z "$SWAPSPACE" ]; then
