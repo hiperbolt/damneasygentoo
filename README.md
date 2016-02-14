@@ -1,5 +1,6 @@
 # damneasygentoo
 An SH script that installs gentoo from a live media, all from a user friendly GUI.
+www.damneasygentoo.tk
 ### description
 Damn Easy Gentoo is an SH script, that can be invoked with:
 
