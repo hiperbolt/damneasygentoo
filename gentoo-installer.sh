@@ -259,8 +259,8 @@ set_disks5() {
 		if [ "$partitionscheme" == "gpt" ] && [ ! -z "$SWAPSPACE" ]; then
 			echo " GPT and true swap"
 			SWAPSPACE=${SWAPSPACE//M}
-			let NEWSWAPSPACE=$SWAPSPACE+131
-			echo -e "mklabel gpt\unit mib\mkpart primary 1 3\name 1 grub\set 1 bios_grub on\mkpart primary 3 131\name 2 boot\mkpart primary 131 $SWAPSPACE\name 3 swap\mkpart primary $SWAPSPACE -1\name 4 rootfs" | gdisk /dev/"$drive" &> /dev/null &
+			let NEWSWAPSPACE=$SWAPSPACE+513
+			echo -e "mklabel gpt\nmkpart ESP fat32 1MiB 513MiB\nset 1 boot on\nmkpart primary linux-swap 513MiB $NEWSWAPSPACE\nmkpart primary $drive_fs $NEWSWAPSPACE 100%\nquit\n" | parted /dev/"$drive" &> /dev/null &
 			pid=$! pri=0.1 msg="Please wait while we format and partition your HDD, this may take some time." load
 		elif [ "$partitionscheme" == "gpt" ]; then
 			echo " GPT and false swap"
