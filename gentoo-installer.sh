@@ -28,9 +28,6 @@
 ## Written with <3
 ##################################################################
 
-#Strings
-
-#Classes
 load() {
 
 	{	int="1"
@@ -257,17 +254,18 @@ set_disks5() {
 			
 	fi
 		if [ "$partitionscheme" == "gpt" ] && [ ! -z "$SWAPSPACE" ]; then
-			echo " GPT and true swap"
 			SWAPSPACE=${SWAPSPACE//M}
 			let NEWSWAPSPACE=$SWAPSPACE+513
 			echo -e "mklabel gpt\nmkpart ESP fat32 1MiB 513MiB\nset 1 boot on\nmkpart primary linux-swap 513MiB $NEWSWAPSPACE\nmkpart primary $drive_fs $NEWSWAPSPACE 100%\nquit\n" | parted /dev/"$drive" &> /dev/null &
 			pid=$! pri=0.1 msg="Please wait while we format and partition your HDD, this may take some time." load
 		elif [ "$partitionscheme" == "gpt" ]; then
-			echo " GPT and false swap"
+			echo -e "mklabel gpt\nmkpart ESP fat32 1MiB 513MiB\nset 1 boot on\nmkpart primary $drive_fs 513 100%\nquit\n" | parted /dev/"$drive" &> /dev/null &
 		elif [ "$partitionscheme" == "mbr" ] && [ ! -z "$SWAPSPACE" ]; then
-			echo " MBR and true swap"
+			SWAPSPACE=${SWAPSPACE//M}
+			let NEWSWAPSPACE=$SWAPSPACE+1
+			echo -e "mklabel msdos\nmkpart primary linux-swap 1MiB $NEWSWAPSPACE\nmkpart primary $drive_fs $NEWSWAPSPACE 100%\nset 2 boot on\nquit\n" | parted /dev/"$drive" &> /dev/null &
 		elif [ "$partitionscheme" == "mbr" ]; then
-			echo " MBR and false swap"
+			echo -e "mklabel msdos\nmkpart primary 1MiB 100%\nset 1 boot on\nquit\n" | parted /dev/"$drive" &> /dev/null &
 		fi
 }
 
@@ -292,6 +290,7 @@ echo "set_disks7"
 #
 #
 #
+# Init
 if [ -f /tmp/damneasygentoo-leftat ]; then
 	source /tmp/damneasygentoo-leftat
 	$leftat
@@ -299,3 +298,4 @@ if [ -f /tmp/damneasygentoo-leftat ]; then
 else
 welcome_box
 fi
+###
