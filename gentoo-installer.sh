@@ -50,32 +50,22 @@ welcome_box() {
 	whiptail --yesno "Welcome to the Gentoo Installer, proceed with instalation?" --title "$title" --yes-button "Yes, proceed." --no-button "No, cancel." 10 70
 	
 	exitstatus=$?
-	if [ $exitstatus = 0 ]; then
-		#User proceeded		
-		check_arch
-	elif [ $exitstatus = 1 ]; then
-		#User pressed Cancel		
-		echo "exitstatus = 1"
-	elif [ $exitstatus = -1 ]; then
-		#Something wrong happened		
-		echo "exitstatus = -1"
+	if [ $exitstatus = 0 ]; then		   check_arch
+	else
+      echo "Installation canceled"
 	fi
 }
 
 check_arch() {
-	whiptail --yesno "Do you wish to install a 32 bit or 64 bit version of Gentoo? ( Sorry but alpha, arm, hppa, ia64, ppc, sparc, mips, s390 and sh not supported )" --title "$title" --yes-button "32 Bit" --no-button "64 Bit" 10 70
+	whiptail --yesno "Do you wish to install a 32 bit or 64 bit version of Gentoo?" --title "$title" --yes-button "32 Bit" --no-button "64 Bit" 10 70
 
 	exitstatus=$?
 	if [ $exitstatus = 0 ]; then
-		echo " guessing its 32"
 		architecture="32bits"
 		check_connection
-	elif [ $exitstatus = 1 ]; then
-		echo "guessing its 64"
+	else
 		architecture="64bits"
 		check_connection
-	else
-		echo " guessing you fucked up m90"
 	fi
 }
 
